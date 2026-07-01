@@ -200,6 +200,12 @@
 
     const runController = new AbortController();
     activeAbortController = runController;
+
+    try {
+      await window.ensureP5();
+    } catch (error) {
+      return;
+    }
     if (runController.signal.aborted) return;
 
     let theme = bindColorMode((nextTheme) => {

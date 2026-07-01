@@ -5,7 +5,7 @@
   const MINUTE_HAND_URL = `${MINUTE_HAND_PNG}?hand=minute`;
   const CENTER_OVERLAY_PNG = "assets/clock/Picture1.png";
   const CENTER_OVERLAY_URL = `${CENTER_OVERLAY_PNG}?layer=center`;
-  const WATCH_FACE_BG_PNG = "assets/presentations/Presentation1.png";
+  const WATCH_FACE_BG_PNG = "assets/presentations/presentation1-bg.webp";
   const WATCH_FACE_BG_URL = `${WATCH_FACE_BG_PNG}?layer=face`;
 
   const ASPECT = 21966 / 12750;
@@ -19,12 +19,14 @@
   const CENTER_OVERLAY_MAX_SIDE_FRAC = 0.102;
 
   let p5Instance = null;
+  let renderToken = 0;
 
   function getFullscreenCard() {
     return document.getElementById("fullscreenCard");
   }
 
   function clear(fullscreenCopy, fullscreenContent, fullscreenInner) {
+    renderToken += 1;
     if (p5Instance) {
       try { p5Instance.remove(); } catch (e) {}
       p5Instance = null;
@@ -45,8 +47,16 @@
     }
   }
 
-  function render(project, fullscreenCopy, fullscreenContent, fullscreenInner) {
+  async function render(project, fullscreenCopy, fullscreenContent, fullscreenInner) {
     clear(fullscreenCopy, fullscreenContent, fullscreenInner);
+    const thisRender = renderToken;
+
+    try {
+      await window.ensureP5();
+    } catch (error) {
+      return;
+    }
+    if (renderToken !== thisRender) return;
 
     fullscreenCopy.textContent = "";
     fullscreenCopy.style.display = "none";

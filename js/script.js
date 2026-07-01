@@ -17,14 +17,14 @@ function createPretextCoverDataUri() {
 const projects = [
   {
     title: "About Me",
-    image: "assets/About%20Me/000006.jpg",
+    image: "assets/About%20Me/000006.webp",
     backColor: "#fff8ef",
   },
   {
     title: "Resume",
-    image: "assets/resume/resume-cover.png",
+    image: "assets/resume/resume-cover.webp",
     backColor: "#ffffff",
-    resumeFile: "assets/resume/[Changmin Hyun] Resume SP 2026.png",
+    resumeFile: "assets/resume/resume-full.webp",
     coverFit: "contain",
   },
   {
@@ -42,13 +42,13 @@ const projects = [
   },
   {
     title: "Clock",
-    image: "assets/clock/watch-cover.png",
+    image: "assets/clock/watch-cover.webp",
     backColor: "#152236",
     clockFace: true,
   },
   {
     title: "The Corner",
-    image: "assets/presentations/Presentation1.png",
+    image: "assets/presentations/presentation1-cover.webp",
     backColor: "#f2efe8",
     cornerCars: true,
   },
@@ -81,7 +81,7 @@ const RESUME_SCROLL_EASE = 0.82;
 const RESUME_SCROLL_STEP_GAIN = 0.24;
 const CLICK_SOUND_PATH = "assets/click.m4a";
 const CLICK_SOUND_GAIN_MULTIPLIER = 20;
-const SCREEN_SAVER_TIMEOUT_MS = 2 * 1000;
+const SCREEN_SAVER_TIMEOUT_MS = 90 * 1000;
 const SCREEN_SAVER_TOASTER_COUNT = 10;
 
 let selectedIndex = 0;
@@ -424,15 +424,19 @@ projects.forEach((item, index) => {
   card.dataset.index = String(index);
   card.style.setProperty("--cover-image", `url("${coverSrc}")`);
   card.style.setProperty("--cover-back-color", item.backColor || "#ffffff");
+  /* Only the initially-selected cover needs to decode eagerly; the rest can load lazily and off the critical path. */
+  const isInitiallySelected = index === 0;
+  const frontLoading = isInitiallySelected ? "eager" : "lazy";
+  const frontPriority = isInitiallySelected ? ' fetchpriority="high"' : "";
   card.innerHTML = `
     <div class="cover-visual${visualContainClass}">
       <div class="cover-face">
-        <img class="cover-front${fitClass}" src="${coverSrc}" alt="${item.title}" />
+        <img class="cover-front${fitClass}" src="${coverSrc}" alt="${item.title}" loading="${frontLoading}" decoding="async"${frontPriority} />
       </div>
       <div class="cover-face cover-back" aria-hidden="true"></div>
     </div>
     <div class="cover-reflection-wrap" aria-hidden="true">
-      <img class="cover-reflection${fitClass}" src="${coverSrc}" alt="" />
+      <img class="cover-reflection${fitClass}" src="${coverSrc}" alt="" loading="lazy" decoding="async" />
       <div class="reflection-fade"></div>
     </div>
   `;

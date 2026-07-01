@@ -85,6 +85,13 @@
     const runController = new AbortController();
     activeAbortController = runController;
 
+    try {
+      await window.ensureP5();
+    } catch (error) {
+      return;
+    }
+    if (runController.signal.aborted) return;
+
     let pretextModule = null;
     try {
       const moduleUrl = new URL("node_modules/@chenglou/pretext/dist/layout.js", window.location.href).href;

@@ -680,7 +680,7 @@ body.cover-expanded .fullscreen-inner.corner-fullscreen .fullscreen-content {
 .fullscreen-inner.clock-fullscreen {
   color: #e8e8ed;
   background-color: var(--clock-bg, #152236);
-  background-image: url("../assets/presentations/Presentation1.png");
+  background-image: url("../assets/presentations/presentation1-bg.webp");
   background-size: contain;
   background-position: center center;
   background-repeat: no-repeat;

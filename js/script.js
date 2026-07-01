@@ -34,163 +34,23 @@ const projects = [
     pretextLab: true,
   },
   {
-    title: "Project Aurora",
-    image: "https://picsum.photos/seed/aurora/700/700",
+    title: "Macintosh Restoration",
+    image: "assets/Macintosh_Restoration/Cover.png",
     backColor: "#ffffff",
-  },
-  {
-    title: "WebGL Lab",
-    image: "https://picsum.photos/seed/webgl/700/700",
-    backColor: "#f6f0ff",
-  },
-  {
-    title: "Motion Playground",
-    image: "https://picsum.photos/seed/motion/700/700",
-    backColor: "#eef7ff",
-  },
-  {
-    title: "Audio Visualizer",
-    image: "https://picsum.photos/seed/audio/700/700",
-    backColor: "#f2fff1",
-  },
-  {
-    title: "Case Studies",
-    image: "https://picsum.photos/seed/case/700/700",
-    backColor: "#f4f4f4",
-  },
-  {
-    title: "Favorites",
-    image: "assets/favorites/circle-blue.png",
-    backColor: "#f6f8ff",
-    favoritesRoom: true,
-    favoritesItems: [
-      {
-        title: "Red Ball",
-        image: "assets/favorites/circle-red.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Orange Ball",
-        image: "assets/favorites/circle-orange.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Yellow Ball",
-        image: "assets/favorites/circle-yellow.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Green Ball",
-        image: "assets/favorites/circle-green.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Blue Ball",
-        image: "assets/favorites/circle-blue.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Purple Ball",
-        image: "assets/favorites/circle-purple.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Pink Ball",
-        image: "assets/favorites/circle-pink.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Gray Ball",
-        image: "assets/favorites/circle-gray.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Teal Ball",
-        image: "assets/favorites/circle-teal.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Lime Ball",
-        image: "assets/favorites/circle-lime.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Cyan Ball",
-        image: "assets/favorites/circle-cyan.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Navy Ball",
-        image: "assets/favorites/circle-navy.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Lavender Ball",
-        image: "assets/favorites/circle-lavender.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Magenta Ball",
-        image: "assets/favorites/circle-magenta.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Coral Ball",
-        image: "assets/favorites/circle-coral.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Amber Ball",
-        image: "assets/favorites/circle-amber.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Mint Ball",
-        image: "assets/favorites/circle-mint.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Olive Ball",
-        image: "assets/favorites/circle-olive.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Sky Ball",
-        image: "assets/favorites/circle-sky.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Indigo Ball",
-        image: "assets/favorites/circle-indigo.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Brown Ball",
-        image: "assets/favorites/circle-brown.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Black Ball",
-        image: "assets/favorites/circle-black.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "White Ball",
-        image: "assets/favorites/circle-white.png",
-        description: "Ball pool item.",
-      },
-      {
-        title: "Peach Ball",
-        image: "assets/favorites/circle-peach.png",
-        description: "Ball pool item.",
-      },
-    ],
+    coverFit: "contain",
+    coverClass: "cover-macintosh-restoration",
   },
   {
     title: "Clock",
     image: "assets/clock/watch-cover.png",
     backColor: "#152236",
     clockFace: true,
+  },
+  {
+    title: "The Corner",
+    image: "assets/presentations/Presentation1.png",
+    backColor: "#f2efe8",
+    cornerCars: true,
   },
 ];
 
@@ -221,6 +81,8 @@ const RESUME_SCROLL_EASE = 0.82;
 const RESUME_SCROLL_STEP_GAIN = 0.24;
 const CLICK_SOUND_PATH = "assets/click.m4a";
 const CLICK_SOUND_GAIN_MULTIPLIER = 20;
+const SCREEN_SAVER_TIMEOUT_MS = 2 * 1000;
+const SCREEN_SAVER_TOASTER_COUNT = 10;
 
 let selectedIndex = 0;
 let isFullscreen = false;
@@ -242,6 +104,14 @@ let clickAudioBuffer = null;
 let clickAudioLoadPromise = null;
 const clickFallbackAudio = new Audio(CLICK_SOUND_PATH);
 clickFallbackAudio.preload = "auto";
+let screenSaverTimer = null;
+let screenSaverActive = false;
+let screenSaverEl = null;
+let screenSaverRaf = null;
+let screenSaverLastTs = 0;
+const screenSaverToasters = [];
+let screenSaverSpriteFrameA = "";
+let screenSaverSpriteFrameB = "";
 
 function playUiClickSound() {
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
@@ -320,6 +190,202 @@ function bindWheelButtonSound(button) {
   bindWheelButtonSound(btn);
 });
 
+function createToasterDataUri(wingRaised) {
+  const wingY = wingRaised ? 20 : 26;
+  const wingPath = wingRaised
+    ? "M20 26 C9 12, 8 5, 22 7 C20 12, 23 17, 30 20 Z"
+    : "M20 30 C7 30, 4 24, 15 20 C22 22, 26 25, 30 29 Z";
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64">` +
+    `<g stroke="#000" stroke-width="2" fill="none">` +
+    `<path d="${wingPath}" fill="#e6e6e6"/>` +
+    `<rect x="24" y="14" width="46" height="36" rx="7" ry="7" fill="#f8f8f8"/>` +
+    `<rect x="32" y="22" width="14" height="15" fill="#c9c9c9"/>` +
+    `<rect x="49" y="22" width="14" height="15" fill="#c9c9c9"/>` +
+    `<path d="M70 28 L83 ${wingY} L90 28 L84 35 Z" fill="#ececec"/>` +
+    `<path d="M24 46 L15 47 L15 39 L24 38 Z" fill="#d2d2d2"/>` +
+    `</g>` +
+    `<rect x="34" y="40" width="5" height="4" fill="#000"/>` +
+    `<rect x="54" y="40" width="5" height="4" fill="#000"/>` +
+    `</svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function resetToasterState(toaster, fromOffscreenLeft = false) {
+  if (!screenSaverEl) return;
+  const w = Math.max(1, screenSaverEl.clientWidth);
+  const h = Math.max(1, screenSaverEl.clientHeight);
+  toaster.size = randomBetween(40, 82);
+  toaster.x = fromOffscreenLeft ? -toaster.size - randomBetween(8, 180) : randomBetween(0, Math.max(1, w - toaster.size));
+  toaster.y = fromOffscreenLeft ? randomBetween(h * 0.35, h + toaster.size * 0.9) : randomBetween(0, Math.max(1, h - toaster.size));
+  toaster.vx = randomBetween(0.7, 2.2);
+  toaster.vy = -randomBetween(0.35, 1.3);
+  toaster.wobblePhase = randomBetween(0, Math.PI * 2);
+  toaster.wobbleSpeed = randomBetween(0.02, 0.05);
+  toaster.wobbleAmp = randomBetween(0.08, 0.28);
+  toaster.frameElapsed = 0;
+  toaster.frameIndex = Math.random() > 0.5 ? 1 : 0;
+  toaster.el.style.width = `${toaster.size}px`;
+  toaster.el.style.height = `${Math.round(toaster.size * 0.67)}px`;
+  toaster.el.style.opacity = String(randomBetween(0.58, 0.98));
+  toaster.el.src = toaster.frameIndex === 0 ? screenSaverSpriteFrameA : screenSaverSpriteFrameB;
+}
+
+function ensureScreenSaver() {
+  if (screenSaverEl) return;
+  screenSaverSpriteFrameA = createToasterDataUri(false);
+  screenSaverSpriteFrameB = createToasterDataUri(true);
+  screenSaverEl = document.createElement("div");
+  screenSaverEl.id = "screenSaver";
+  screenSaverEl.className = "screen-saver";
+  screenSaverEl.setAttribute("aria-hidden", "true");
+  const fieldEl = document.createElement("div");
+  fieldEl.className = "screen-saver-field";
+  screenSaverEl.appendChild(fieldEl);
+
+  for (let i = 0; i < SCREEN_SAVER_TOASTER_COUNT; i += 1) {
+    const el = document.createElement("img");
+    el.className = "screen-saver-toaster";
+    el.alt = "";
+    el.setAttribute("aria-hidden", "true");
+    el.draggable = false;
+    fieldEl.appendChild(el);
+    const toaster = {
+      el,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      size: 54,
+      wobblePhase: 0,
+      wobbleSpeed: 0.03,
+      wobbleAmp: 0.2,
+      frameElapsed: 0,
+      frameIndex: 0,
+    };
+    screenSaverToasters.push(toaster);
+  }
+
+  screenSaverEl.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    hideScreenSaver();
+    resetScreenSaverTimer();
+  });
+
+  document.body.appendChild(screenSaverEl);
+}
+
+function stopScreenSaverAnimation() {
+  if (!screenSaverRaf) return;
+  cancelAnimationFrame(screenSaverRaf);
+  screenSaverRaf = null;
+  screenSaverLastTs = 0;
+}
+
+function runScreenSaverAnimation(ts) {
+  if (!screenSaverActive || !screenSaverEl || !screenSaverToasters.length) {
+    stopScreenSaverAnimation();
+    return;
+  }
+
+  if (!screenSaverLastTs) {
+    screenSaverLastTs = ts;
+  }
+  const frameScale = Math.max(0.5, Math.min(2.4, ((ts - screenSaverLastTs) || 16.67) / 16.67));
+  screenSaverLastTs = ts;
+
+  const areaWidth = Math.max(1, screenSaverEl.clientWidth);
+  const areaHeight = Math.max(1, screenSaverEl.clientHeight);
+  const wingSwapMs = 160;
+
+  screenSaverToasters.forEach((toaster) => {
+    toaster.x += toaster.vx * frameScale;
+    toaster.y += toaster.vy * frameScale;
+    toaster.wobblePhase += toaster.wobbleSpeed * frameScale;
+    const wobble = Math.sin(toaster.wobblePhase) * toaster.wobbleAmp;
+
+    toaster.frameElapsed += 16.67 * frameScale;
+    if (toaster.frameElapsed >= wingSwapMs) {
+      toaster.frameElapsed = 0;
+      toaster.frameIndex = toaster.frameIndex === 0 ? 1 : 0;
+      toaster.el.src = toaster.frameIndex === 0 ? screenSaverSpriteFrameA : screenSaverSpriteFrameB;
+    }
+
+    const width = toaster.el.offsetWidth || toaster.size;
+    const height = toaster.el.offsetHeight || toaster.size;
+    if (toaster.x > areaWidth + width || toaster.y < -height - 24) {
+      resetToasterState(toaster, true);
+    }
+
+    toaster.el.style.transform = `translate3d(${toaster.x}px, ${toaster.y}px, 0) rotate(${wobble}deg)`;
+  });
+
+  screenSaverRaf = requestAnimationFrame(runScreenSaverAnimation);
+}
+
+function showScreenSaver() {
+  if (isFullscreen) return;
+  if (screenSaverActive) return;
+  ensureScreenSaver();
+  if (!screenSaverEl || !screenSaverToasters.length) return;
+
+  screenSaverActive = true;
+  document.body.classList.add("screensaver-active");
+  screenSaverEl.setAttribute("aria-hidden", "false");
+  screenSaverToasters.forEach((toaster) => {
+    resetToasterState(toaster, false);
+  });
+
+  stopScreenSaverAnimation();
+  screenSaverRaf = requestAnimationFrame(runScreenSaverAnimation);
+}
+
+function hideScreenSaver() {
+  if (!screenSaverActive) return;
+  screenSaverActive = false;
+  document.body.classList.remove("screensaver-active");
+  if (screenSaverEl) {
+    screenSaverEl.setAttribute("aria-hidden", "true");
+  }
+  stopScreenSaverAnimation();
+}
+
+function resetScreenSaverTimer() {
+  clearTimeout(screenSaverTimer);
+  if (isFullscreen) {
+    hideScreenSaver();
+    return;
+  }
+  screenSaverTimer = setTimeout(() => {
+    showScreenSaver();
+  }, SCREEN_SAVER_TIMEOUT_MS);
+}
+
+function onAnyUserActivity(event) {
+  if (isFullscreen) {
+    if (screenSaverActive) {
+      hideScreenSaver();
+    }
+    clearTimeout(screenSaverTimer);
+    return;
+  }
+  if (screenSaverActive) {
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    event.stopPropagation();
+    hideScreenSaver();
+    resetScreenSaverTimer();
+    return;
+  }
+  resetScreenSaverTimer();
+}
+
 function getViewportSize() {
   const viewport = window.visualViewport;
   return {
@@ -349,8 +415,9 @@ projects.forEach((item, index) => {
   const contain = item.coverFit === "contain";
   const fitClass = contain ? " cover-contain" : "";
   const visualContainClass = contain ? " cover-visual-contain" : "";
+  const coverClass = item.coverClass ? ` ${item.coverClass}` : "";
   const card = document.createElement("div");
-  card.className = "cover-item";
+  card.className = `cover-item${coverClass}`;
   card.tabIndex = 0;
   card.setAttribute("role", "option");
   card.setAttribute("aria-label", item.title);
@@ -547,14 +614,22 @@ function onNextControl() {
   if (isFullscreen) {
     const project = projects[selectedIndex];
     if (project && project.pretextLab) {
-      if (window.PretextLabView && typeof window.PretextLabView.isActive === "function" && window.PretextLabView.isActive()) {
-        if (window.SnakeView) {
+      if (
+        window.PretextLabView &&
+        typeof window.PretextLabView.isActive === "function" &&
+        window.PretextLabView.isActive()
+      ) {
+        if (window.PretextShapesView) {
           window.PretextLabView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
-          window.SnakeView.render(project, fullscreenCopy, fullscreenContent, fullscreenInner);
+          window.PretextShapesView.render(project, fullscreenCopy, fullscreenContent, fullscreenInner);
           return true;
         }
       }
-      if (window.SnakeView && typeof window.SnakeView.isActive === "function" && window.SnakeView.isActive()) {
+      if (
+        window.PretextShapesView &&
+        typeof window.PretextShapesView.isActive === "function" &&
+        window.PretextShapesView.isActive()
+      ) {
         return true;
       }
     }
@@ -568,14 +643,22 @@ function onPrevControl() {
   if (isFullscreen) {
     const project = projects[selectedIndex];
     if (project && project.pretextLab) {
-      if (window.SnakeView && typeof window.SnakeView.isActive === "function" && window.SnakeView.isActive()) {
+      if (
+        window.PretextShapesView &&
+        typeof window.PretextShapesView.isActive === "function" &&
+        window.PretextShapesView.isActive()
+      ) {
         if (window.PretextLabView) {
-          window.SnakeView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
+          window.PretextShapesView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
           window.PretextLabView.render(project, fullscreenCopy, fullscreenContent, fullscreenInner);
           return true;
         }
       }
-      if (window.PretextLabView && typeof window.PretextLabView.isActive === "function" && window.PretextLabView.isActive()) {
+      if (
+        window.PretextLabView &&
+        typeof window.PretextLabView.isActive === "function" &&
+        window.PretextLabView.isActive()
+      ) {
         return true;
       }
     }
@@ -590,22 +673,22 @@ function clearFullscreenContent() {
   if (window.ClockView) {
     window.ClockView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
   }
-  if (window.FavoritesView) {
-    window.FavoritesView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
-  }
   if (window.PretextLabView) {
     window.PretextLabView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
   }
-  if (window.SnakeView) {
-    window.SnakeView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
+  if (window.PretextShapesView) {
+    window.PretextShapesView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
+  }
+  if (window.CornerView) {
+    window.CornerView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
   }
   window.ResumeView.clear(fullscreenCopy, fullscreenContent);
   if (fullscreenInner) {
     fullscreenInner.style.background = "";
     fullscreenInner.classList.remove("clock-fullscreen");
-    fullscreenInner.classList.remove("favorites-fullscreen");
     fullscreenInner.classList.remove("pretext-fullscreen");
-    fullscreenInner.classList.remove("snake-fullscreen");
+    fullscreenInner.classList.remove("pretext-shapes-fullscreen");
+    fullscreenInner.classList.remove("corner-fullscreen");
     fullscreenInner.style.removeProperty("--clock-bg");
   }
 }
@@ -615,31 +698,33 @@ function renderFullscreenContent(project) {
     window.ClockView.render(project, fullscreenCopy, fullscreenContent, fullscreenInner);
     return;
   }
-  if (project.favoritesRoom && window.FavoritesView) {
-    window.FavoritesView.render(project, fullscreenCopy, fullscreenContent, fullscreenInner);
-    return;
-  }
   if (project.pretextLab && window.PretextLabView) {
     window.PretextLabView.render(project, fullscreenCopy, fullscreenContent, fullscreenInner);
+    return;
+  }
+  if (project.cornerCars && window.CornerView) {
+    window.CornerView.render(project, fullscreenCopy, fullscreenContent, fullscreenInner);
     return;
   }
   if (window.ClockView) {
     window.ClockView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
   }
-  if (window.FavoritesView) {
-    window.FavoritesView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
-  }
   if (window.PretextLabView) {
     window.PretextLabView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
   }
-  if (window.SnakeView) {
-    window.SnakeView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
+  if (window.PretextShapesView) {
+    window.PretextShapesView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
+  }
+  if (window.CornerView) {
+    window.CornerView.clear(fullscreenCopy, fullscreenContent, fullscreenInner);
   }
   window.ResumeView.render(project, fullscreenCopy, fullscreenContent);
 }
 
 function openSelected() {
   if (isFullscreen) return;
+  clearTimeout(screenSaverTimer);
+  hideScreenSaver();
   const selectedCard = cards[selectedIndex];
   document.body.classList.remove("cover-collapsing");
   clearTimeout(expandTimer);
@@ -662,6 +747,7 @@ function openSelected() {
     document.body.classList.add("cover-expanded");
     selectedCard.classList.add("expanded");
     isFullscreen = true;
+    clearTimeout(screenSaverTimer);
     siblingsHideTimer = setTimeout(() => {
       siblingsHideTimer = null;
       if (!isFullscreen || !selectedCard.classList.contains("expanded")) return;
@@ -695,6 +781,7 @@ function closeFullscreen() {
     selectedCard.style.removeProperty("--expand-scale");
     isFullscreen = false;
     clearFullscreenContent();
+    resetScreenSaverTimer();
     /* Unflip immediately so the 420ms transform matches the forward flip (no extra delay after close). */
     selectedCard.classList.remove("flipped");
   };
@@ -837,7 +924,18 @@ window.addEventListener("pageshow", syncResponsiveLayout);
 if (window.visualViewport) {
   window.visualViewport.addEventListener("resize", syncResponsiveLayout);
 }
+["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "touchmove"].forEach((eventName) => {
+  window.addEventListener(eventName, onAnyUserActivity, { capture: true, passive: false });
+});
+window.addEventListener("blur", resetScreenSaverTimer);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    hideScreenSaver();
+  }
+  resetScreenSaverTimer();
+});
 
 updateResponsiveCoverSize();
 scheduleProjectTitleUpdate(true);
 renderCoverflow();
+resetScreenSaverTimer();
